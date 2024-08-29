@@ -3,7 +3,7 @@
 ## Solution [here](https://youtu.be/gnRrAbUzMdc)
 
 ### Run the following Commands in the Cloud shell
-####Do not perform the lab on this region => "europe-west4" 
+#### Do not perform the lab on this region => "europe-west4" 
 
 ```
 export REGION=
