@@ -3,38 +3,106 @@
 ## Solution [here](https://youtu.be/gnRrAbUzMdc)
 
 ### Run the following Commands in the Cloud shell
-#### Do not perform the lab on this region => "europe-west4" 
+#### Find out the region from Task 4
 
 ```
 export REGION=
 ```
 
 ```
-gcloud compute instances create dev-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --machine-type=e2-medium --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default --metadata=enable-oslogin=true --maintenance-policy=MIGRATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server --create-disk=auto-delete=yes,boot=yes,device-name=dev-instance,image=projects/debian-cloud/global/images/debian-11-bullseye-v20240213,mode=rw,size=10,type=projects/$DEVSHELL_PROJECT_ID/zones/$ZONE/diskTypes/pd-balanced --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --labels=goog-ec-src=vm_add-gcloud --reservation-affinity=any
+gcloud auth list
 
-gcloud compute firewall-rules create allow-http --allow tcp:80 --description "Allow HTTP traffic" --direction INGRESS --target-tags http-server --network default
+virtualenv -p python3 vrenv
 
+source vrenv/bin/activate
 
-
-cat > quick.sh <<'EOF_END'
-sudo apt-get update
-sudo apt-get install git -y
-sudo apt-get install python3-setuptools python3-dev build-essential -y
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-sudo python3 get-pip.py
-python3 --version
-pip3 --version
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst
-ln -s ~/training-data-analyst/courses/developingapps/v1.3/python/devenv ~/devenv
-cd ~/devenv/
-sudo python3 server.py
+
+cd ~/training-data-analyst/courses/developingapps/python/datastore/start
+
+export GCLOUD_PROJECT=$DEVSHELL_PROJECT_ID
+
+pip install -r requirements.txt
+
+gcloud app create --region "$REGION"
+
+cd quiz/gcp
+
+
+cat > datastore.py <<EOF_END
+# TODO: Import the os module
+
+import os
+
+# END TODO
+
+# TODO: Get the GCLOUD_PROJECT environment variable
+
+project_id = os.getenv('GCLOUD_PROJECT')
+
+# END TODO
+
+from flask import current_app
+
+# TODO: Import the datastore module from the google.cloud package
+
+from google.cloud import datastore
+
+# END TODO
+
+# TODO: Create a Cloud Datastore client object
+# The datastore client object requires the Project ID.
+# Pass through the Project ID you looked up from the
+# environment variable earlier
+
+datastore_client = datastore.Client(project_id)
+
+# END TODO
+
+"""
+Create and persist and entity for each question
+The Datastore key is the equivalent of a primary key in a relational database.
+There are two main ways of writing a key:
+1. Specify the kind, and let Datastore generate a unique numeric id
+2. Specify the kind and a unique string id
+"""
+def save_question(question):
+# TODO: Create a key for a Datastore entity
+# whose kind is Question
+
+    key = datastore_client.key('Question')
+
+# END TODO
+
+# TODO: Create a Datastore entity object using the key
+
+    q_entity = datastore.Entity(key=key)
+
+# END TODO
+
+# TODO: Iterate over the form values supplied to the function
+
+    for q_prop, q_val in question.items():
+
+# END TODO
+
+# TODO: Assign each key and value to the Datastore entity
+
+        q_entity[q_prop] = q_val
+
+# END TODO
+
+# TODO: Save the entity
+
+    datastore_client.put(q_entity)
+
+# END TODO
 EOF_END
 
-sleep 10
+cd ~/training-data-analyst/courses/developingapps/python/datastore/start
 
-gcloud compute scp quick.sh dev-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet
 
-gcloud compute ssh dev-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/quick.sh"
+python run_server.py
 ```
 
 
